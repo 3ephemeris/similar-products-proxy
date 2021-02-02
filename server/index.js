@@ -1,33 +1,24 @@
-/* eslint-disable no-console */
 const express = require('express');
+const path = require('path');
 const cors = require('cors');
-const morgan = require('morgan');
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const router = require('./router/index.js');
-const { service3 } = require('./config/services.js');
 
-// server setup
-const PORT = process.env.PORT || 3000;
-const PUBLIC_DIR = `${__dirname}/../public`;
 const app = express();
-
-// middleware
-app.use(morgan('dev'));
 app.use(cors());
+app.use(express.static(path.join(__dirname, '..', 'public')));
+const PORT = 3000;
 
-app.use(express.static(PUBLIC_DIR));
-
-// Routes for bundled services files and apis
-app.use('/bundles', router.bundles);
-app.use('/api', router.api);
-app.use(service3.API, createProxyMiddleware({
-  target: service3.url,
-  changeOrigin: true,
-}));
-
-// having this above the routers messes up the post requests...
 app.use(express.json());
 
+//size-carousel
+app.use('/api/items', createProxyMiddleware({ target: 'http://ec2-52-53-215-61.us-west-1.compute.amazonaws.com:3001', changeOrigin: true }));
+//reviews
+app.use('/productreviews', createProxyMiddleware({ target: 'http://54.187.133.21:3003', changeOrigin: true }));
+//similar-products
+app.use('/api/products/:productId', createProxyMiddleware({ target: 'http://3.101.140.254:3002', changeOrigin: true }));
+app.use('/api/wishlist/:productId', createProxyMiddleware({ target: 'http://3.101.140.254:3002', changeOrigin: true }));
+app.use('/api/wishlist/:productId', createProxyMiddleware({ target: 'http://3.101.140.254:3002', changeOrigin: true }));
+
 app.listen(PORT, () => {
-  console.log(`Proxy server running on port ${PORT}...`);
+  console.log(`Server Listening on port ${PORT}...`);
 });
